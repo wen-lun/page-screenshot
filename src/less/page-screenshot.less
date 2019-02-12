@@ -1,0 +1,94 @@
+@import './iconfont.less';
+
+.page-screenshot-tools{
+    position: fixed;
+    z-index: 5100;
+    background: white;
+    padding: 4px;
+    user-select: none;
+    &.hide{
+        display: none;
+    }
+    .divider{
+        display: inline-block;
+        border-left: 1px solid #ddd;
+        height: 14px;
+        margin: 0 4px;
+    }
+    .item{
+        padding: 2px 4px;
+        margin: 0 3px;
+        cursor: pointer;
+        transition: all .2s;
+        display: inline-block;
+        &:hover{
+            box-shadow: 0 0 2px #666;
+        }
+        &.active{
+            box-shadow:inset 0 0 2px #666;
+        }
+        &.ok{
+            color: green;
+        }
+        &.cancel{
+            color:red;
+        }
+    }
+}
+
+.page-screenshot-tool-option{
+    position: fixed;
+    z-index: 5100;
+    background: white;
+    padding: 4px;
+    user-select: none;
+    &.hide{
+        display: none;
+    }
+    .divider{
+        float: left;
+        border-left: 1px solid #ddd;
+        height: 18px;
+        margin: 0 4px;
+    }
+    .color{
+        float: left;
+        padding: 8px;
+        margin: 0 1px;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        transition: all .2s;
+        &:hover{
+            box-shadow: 0 0 2px #666;
+        }
+        &.active{
+            box-shadow: 0 0 2px red;
+        }
+    }
+    .size{
+        float: left;
+        width: 16px;
+        height: 16px;
+        margin: 0 1px;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: all .2s;
+        padding: 2px;
+        div{
+            width: 100%;
+            background: black;
+        }
+        &:hover{
+            box-shadow: 0 0 2px #666;
+        }
+        &.active{
+            box-shadow: 0 0 2px red;
+        }
+    }
+}
+
+
+  
+  
