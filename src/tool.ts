@@ -23,7 +23,7 @@ enum CommonSize {
 }
 
 enum TextSize {
-    SMALL = 12, MIDDLE = 14, LARGE = 16
+    SMALL = 14, MIDDLE = 18, LARGE = 22
 }
 
 /**工具栏 */
