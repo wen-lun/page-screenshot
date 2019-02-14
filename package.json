@@ -27,7 +27,8 @@
   "author": "wenlun",
   "license": "ISC",
   "dependencies": {
-    "canvas-arrow": "^1.0.0",
+    "canvas-arrow": "^1.1.1",
+    "canvas-multiline": "^1.0.0",
     "file-saver": "^2.0.0",
     "html2canvas": "^1.0.0-alpha.12"
   },
