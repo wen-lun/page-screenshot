@@ -35,6 +35,7 @@ export declare interface Option {
     background?: string
     saveFileName?: string
     onClipEnd?: (clip: { dataURL: string, blob: Blob }) => any
+    zIndex?: number
 }
 
 
@@ -43,15 +44,16 @@ export default class PageScreenshot {
         dotRadius: 3,
         borderColor: "red",
         background: "rgba(0,0,0,.4)",
-        saveFileName: "截图"
+        saveFileName: "截图",
+        zIndex: 5000
     }
 
     private bodyCanvas?: HTMLCanvasElement
 
     private maskCanvas = document.createElement("canvas")
     private maskCtx = this.maskCanvas.getContext("2d")!
-    private tools = new Tool();
-    private paint = new Paint();
+    private tools: Tool
+    private paint: Paint
 
     private startPoint = { x: 0, y: 0 }
     private clipInfo?: ClipInfo
@@ -63,6 +65,8 @@ export default class PageScreenshot {
 
     constructor(options?: Option) {
         this.options = { ...this.options, ...options };
+        this.tools = new Tool(this.options.zIndex!);
+        this.paint = new Paint(this.options.zIndex!);
         this.initMask();
     }
 
@@ -73,7 +77,7 @@ export default class PageScreenshot {
         this.maskCanvas.style.left = "0px";
         this.maskCanvas.style.right = "0px";
         this.maskCanvas.style.bottom = "0px";
-        this.maskCanvas.style.zIndex = '5000';
+        this.maskCanvas.style.zIndex = this.options.zIndex + "";
         this.maskCanvas.width = innerWidth;
         this.maskCanvas.height = innerHeight;
     }
@@ -112,8 +116,13 @@ export default class PageScreenshot {
                 let { size, color } = item.option!;
                 this.paint.setPaintType({ size, color, type: item.type });
                 this.paint.addToBody();
+                if ("text" == item.type) {
+                    this.paint.updateTextareaStatus(item.option);
+                } else {
+                    this.paint.showTextarea(false);
+                }
             } else {
-                this.paint.setPaintType();
+                if (this.paint.getStackSize() == 0) this.paint.removeFromBody();
             }
         });
     }
