@@ -1,4 +1,5 @@
 import 'canvas-arrow'
+import 'canvas-multiline'
 
 interface StackItem {
     size: number
@@ -18,16 +19,29 @@ export default class Paint {
 
     /**用来显示绘画的画布 */
     private canvas = document.createElement("canvas")
+    /**文字工具用到 */
+    private textarea = document.createElement("textarea");
     /**用来存储涂鸦的过程，使用stack.pop()可实现撤销操作 */
     private stack: Array<StackItem> = []
     private paintType?: PaintType
     private isDrag = false
     private startPoint?: { x: number, y: number }
     private isAddToBody = false
+    private isShowTextarea = false
 
-    constructor() {
+    constructor(zIndex: number) {
         this.canvas.style.position = "fixed";
-        this.canvas.style.zIndex = "5100";
+        this.canvas.style.zIndex = (zIndex + 100) + "";
+        this.textarea.style.position = "fixed";
+        this.textarea.style.zIndex = (zIndex + 200) + "";
+        this.textarea.style.display = "none";
+        this.textarea.style.resize = "none";
+        this.textarea.style.overflow = "hidden";
+        this.textarea.style.background = "transparent";
+        this.textarea.style.padding = "0px";
+        this.textarea.style.fontFamily = "Arial";
+        this.textarea.style.outline = "none";
+        this.textarea.style.border = "1px dotted #ccc";
         this.addEventListener();
     }
 
@@ -41,21 +55,60 @@ export default class Paint {
         return this.stack[this.stack.length - 1];
     }
 
-    private onMousedown({ offsetX: x, offsetY: y }: MouseEvent) {
+    private onMousedown({ offsetX: x, offsetY: y, clientX, clientY }: MouseEvent) {
         if (!this.paintType) return;
+        const { size, color, type } = this.paintType;
+        const { width, height } = this.canvas;
+        if (this.isShowTextarea) {//若已显示textarea，那么应隐藏它，并将其文字显示到画布
+            let text = this.textarea.value;
+            if (text.trim().length == 0) {
+                this.stack.pop();//撤销掉
+                this.showTextarea(false);
+                return;
+            }
+            const { cache } = this.getStackTop();
+            const { x, y } = this.startPoint!;
+
+            const ctx = cache.getContext("2d")!;
+            ctx.save();
+            ctx.beginPath();
+            ctx.fillStyle = color;
+            ctx.font = `${size}px Arial`;
+            ctx.textBaseline = "top";
+            ctx.fillMultilineText(text, x + 1, y + 1, width - x - 3, 3);
+            ctx.restore();
+
+            this.draw();
+            this.showTextarea(false);
+            return;
+        }
+
+
         this.isDrag = true;
         const cache = document.createElement("canvas");
-        const { width, height } = this.canvas;
         cache.width = width;
         cache.height = height;
-        const { size, color } = this.paintType;
         this.stack.push({ cache, size, color });
         this.startPoint = { x, y };
+
+        if ("text" == type) {//文字工具
+            this.showTextarea(true);
+            this.textarea.style.left = `${clientX}px`;
+            this.textarea.style.top = `${clientY}px`;
+            // TODO 文本框 宽高 自动计算
+            this.textarea.style.width = `${width - x - 2}px`;
+            this.textarea.style.height = `${height - y - 2}px`;
+            setTimeout(() => {
+                this.textarea.focus();
+            }, 50);
+
+            this.isDrag = false;
+        }
     }
 
     private onMousemove({ offsetX, offsetY }: MouseEvent) {
         let currentStackItem = this.getStackTop();
-        if (!this.isDrag || !this.paintType || !currentStackItem || !this.startPoint) return;
+        if (this.isShowTextarea || !this.isDrag || !this.paintType || !currentStackItem || !this.startPoint) return;
         const { size, color, type } = this.paintType;
         const { width, height } = this.canvas;
 
@@ -76,13 +129,26 @@ export default class Paint {
             } else if (3 == size) {
                 width = 7;
             }
-            ctx.drawArrow(x, y, offsetX, offsetY, width);
-            ctx.fill();
+            ctx.fillArrow(x, y, offsetX, offsetY, width);
         } else if ("brush" == type) {
             ctx.moveTo(x, y);
             ctx.lineTo(offsetX, offsetY);
             ctx.stroke();
             this.startPoint = { x: offsetX, y: offsetY };
+        } else if ("ellipse" == type) {
+            const dx = Math.abs(offsetX - x);
+            const dy = Math.abs(offsetY - y);
+            //取x,y距离一半的最大值作为圆的直径
+            const d = Math.max(dx, dy);
+            ctx.save();
+            ctx.scale(dx / d, dy / d);//缩放圆形成椭圆
+            //计算起点坐标与终点坐标之间的中点坐标
+            const mx = (x + offsetX) * 0.5 / (dx / d);
+            const my = (y + offsetY) * 0.5 / (dy / d);
+            ctx.arc(mx, my, d * 0.5, 0, 2 * Math.PI);
+            ctx.closePath();
+            ctx.restore();//先restore,再stroke，不然椭圆的线宽不同
+            ctx.stroke();
         }
         ctx.restore();
 
@@ -90,6 +156,7 @@ export default class Paint {
     }
 
     private onMouseup() {
+        if (this.isShowTextarea) return;
         this.isDrag = false;
     }
 
@@ -100,6 +167,18 @@ export default class Paint {
         this.stack.forEach(({ cache }) => {
             ctx.drawImage(cache, 0, 0);
         });
+    }
+
+    public showTextarea(show: boolean) {
+        this.isShowTextarea = show;
+        this.textarea.style.display = show ? "" : "none";
+        this.textarea.value = "";
+    }
+
+    public updateTextareaStatus({ size, color }: any) {
+        this.textarea.style.fontSize = `${size}px`;
+        this.textarea.style.color = color;
+        this.textarea.focus();
     }
 
     public getStackSize() {
@@ -113,15 +192,18 @@ export default class Paint {
     public addToBody() {
         if (this.isAddToBody) return;
         document.body.appendChild(this.canvas);
+        document.body.appendChild(this.textarea);
         this.isAddToBody = true;
     }
 
     public removeFromBody() {
         if (!this.isAddToBody) return;
         document.body.removeChild(this.canvas);
+        document.body.removeChild(this.textarea);
         this.stack = [];
         this.draw();
         this.isAddToBody = false;
+        this.showTextarea(false);
     }
 
     public updateCanvasPosition(l: number, t: number, w: number, h: number) {
@@ -132,8 +214,13 @@ export default class Paint {
         this.canvas.height = h;
     }
 
-    public setPaintType(type?: PaintType) {
-        this.paintType = type;
+    public setPaintType(paintType?: PaintType) {
+        this.paintType = paintType;
+        if (paintType && "text" == paintType.type) {
+            this.canvas.style.cursor = "text";
+        } else {
+            this.canvas.style.cursor = "crosshair";//十字线
+        }
     }
 
     /**撤销 */
