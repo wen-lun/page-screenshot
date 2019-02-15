@@ -28,6 +28,7 @@ export default class Paint {
     private startPoint?: { x: number, y: number }
     private isAddToBody = false
     private isShowTextarea = false
+    private static FONT_FAMILY = "Arial";
 
     constructor(zIndex: number) {
         this.canvas.style.position = "fixed";
@@ -40,7 +41,7 @@ export default class Paint {
         this.textarea.style.overflow = "hidden";
         this.textarea.style.background = "transparent";
         this.textarea.style.padding = "0px";
-        this.textarea.style.fontFamily = "Arial";
+        this.textarea.style.fontFamily = Paint.FONT_FAMILY;
         this.textarea.style.outline = "none";
         this.textarea.style.border = "2px dotted #ccc";
         this.addEventListener();
@@ -50,20 +51,7 @@ export default class Paint {
         this.canvas.addEventListener("mousedown", this.onMousedown.bind(this));
         this.canvas.addEventListener("mousemove", this.onMousemove.bind(this));
         window.addEventListener("mouseup", this.onMouseup.bind(this));
-        this.textarea.addEventListener("input", ({ target }: any) => {
-            if (!this.paintType || !this.startPoint) return;
-            const { size } = this.paintType;
-            const ctx = this.canvas.getContext("2d")!;
-            ctx.font = `${size}px Arial`;
-            const lines: Array<string> = target.value.split("\n") || [];
-            const widths = lines.map(text => ctx.measureText(text).width);
-            //防止文本框的右边超出裁剪区域            
-            const width = Math.min(Math.max(...widths) + 10, this.canvas.width - this.startPoint.x - 4);
-            this.textarea.style.width = `${width}px`;
-            //防止文本框的下边超出裁剪区域
-            const height = Math.min(this.textarea.scrollHeight, this.canvas.height - this.startPoint.y - 4);
-            this.textarea.style.height = `${height}px`;
-        });
+        this.textarea.addEventListener("input", this.updateTextareaWH.bind(this));
     }
 
     private getStackTop() {
@@ -88,7 +76,7 @@ export default class Paint {
             ctx.save();
             ctx.beginPath();
             ctx.fillStyle = color;
-            ctx.font = `${size}px Arial`;
+            ctx.font = `${size}px ${Paint.FONT_FAMILY}`;
             ctx.textBaseline = "top";
             ctx.fillMultilineText(text, x + 1, y + 1, width - x - 3, 3);
             ctx.restore();
@@ -171,6 +159,28 @@ export default class Paint {
         this.isDrag = false;
     }
 
+    /**动态更新文本框宽高 */
+    private updateTextareaWH() {
+        if (!this.paintType) return;
+        const value = this.textarea.value;
+        const { size } = this.paintType;
+        if (value.length == 0) {
+            this.textarea.style.width = `${size}px`;
+            this.textarea.style.height = `${size + 4}px`;
+        } else if (this.startPoint) {
+            const ctx = this.canvas.getContext("2d")!;
+            ctx.font = `${size}px ${Paint.FONT_FAMILY}`;
+            const lines: Array<string> = value.split("\n") || [];
+            const widths = lines.map(text => ctx.measureText(text).width);
+            //防止文本框的右边超出裁剪区域            
+            const width = Math.min(Math.max(...widths) + 10, this.canvas.width - this.startPoint.x - 4);
+            this.textarea.style.width = `${width}px`;
+            //防止文本框的下边超出裁剪区域
+            const height = Math.min(this.textarea.scrollHeight, this.canvas.height - this.startPoint.y - 4);
+            this.textarea.style.height = `${height}px`;
+        }
+    }
+
     private draw() {
         const ctx = this.canvas.getContext("2d")!;
         const { width, height } = this.canvas;
@@ -184,17 +194,14 @@ export default class Paint {
         this.isShowTextarea = show;
         this.textarea.style.display = show ? "" : "none";
         this.textarea.value = "";
-        if (this.paintType) {
-            const { size } = this.paintType;
-            this.textarea.style.width = `${size}px`;
-            this.textarea.style.height = `${size + 4}px`;
-        }
+        if (show) this.updateTextareaWH();
     }
 
     public updateTextareaStatus({ size, color }: any) {
         this.textarea.style.fontSize = `${size}px`;
         this.textarea.style.color = color;
         this.textarea.focus();
+        this.updateTextareaWH();
     }
 
     public getStackSize() {
