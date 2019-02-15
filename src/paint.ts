@@ -44,6 +44,7 @@ export default class Paint {
         this.textarea.style.fontFamily = Paint.FONT_FAMILY;
         this.textarea.style.outline = "none";
         this.textarea.style.border = "2px dotted #ccc";
+        this.textarea.style.lineHeight = "initial";
         this.addEventListener();
     }
 
