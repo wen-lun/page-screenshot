@@ -32,6 +32,7 @@ export default class Paint {
     constructor(zIndex: number) {
         this.canvas.style.position = "fixed";
         this.canvas.style.zIndex = (zIndex + 100) + "";
+        this.canvas.style.cursor = "crosshair";//十字线
         this.textarea.style.position = "fixed";
         this.textarea.style.zIndex = (zIndex + 200) + "";
         this.textarea.style.display = "none";
@@ -41,7 +42,7 @@ export default class Paint {
         this.textarea.style.padding = "0px";
         this.textarea.style.fontFamily = "Arial";
         this.textarea.style.outline = "none";
-        this.textarea.style.border = "1px dotted #ccc";
+        this.textarea.style.border = "2px dotted #ccc";
         this.addEventListener();
     }
 
@@ -49,6 +50,20 @@ export default class Paint {
         this.canvas.addEventListener("mousedown", this.onMousedown.bind(this));
         this.canvas.addEventListener("mousemove", this.onMousemove.bind(this));
         window.addEventListener("mouseup", this.onMouseup.bind(this));
+        this.textarea.addEventListener("input", ({ target }: any) => {
+            if (!this.paintType || !this.startPoint) return;
+            const { size } = this.paintType;
+            const ctx = this.canvas.getContext("2d")!;
+            ctx.font = `${size}px Arial`;
+            const lines: Array<string> = target.value.split("\n") || [];
+            const widths = lines.map(text => ctx.measureText(text).width);
+            //防止文本框的右边超出裁剪区域            
+            const width = Math.min(Math.max(...widths) + 10, this.canvas.width - this.startPoint.x - 4);
+            this.textarea.style.width = `${width}px`;
+            //防止文本框的下边超出裁剪区域
+            const height = Math.min(this.textarea.scrollHeight, this.canvas.height - this.startPoint.y - 4);
+            this.textarea.style.height = `${height}px`;
+        });
     }
 
     private getStackTop() {
@@ -95,13 +110,9 @@ export default class Paint {
             this.showTextarea(true);
             this.textarea.style.left = `${clientX}px`;
             this.textarea.style.top = `${clientY}px`;
-            // TODO 文本框 宽高 自动计算
-            this.textarea.style.width = `${width - x - 2}px`;
-            this.textarea.style.height = `${height - y - 2}px`;
             setTimeout(() => {
                 this.textarea.focus();
             }, 50);
-
             this.isDrag = false;
         }
     }
@@ -173,6 +184,11 @@ export default class Paint {
         this.isShowTextarea = show;
         this.textarea.style.display = show ? "" : "none";
         this.textarea.value = "";
+        if (this.paintType) {
+            const { size } = this.paintType;
+            this.textarea.style.width = `${size}px`;
+            this.textarea.style.height = `${size + 4}px`;
+        }
     }
 
     public updateTextareaStatus({ size, color }: any) {
@@ -216,11 +232,6 @@ export default class Paint {
 
     public setPaintType(paintType?: PaintType) {
         this.paintType = paintType;
-        if (paintType && "text" == paintType.type) {
-            this.canvas.style.cursor = "text";
-        } else {
-            this.canvas.style.cursor = "crosshair";//十字线
-        }
     }
 
     /**撤销 */
