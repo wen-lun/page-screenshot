@@ -416,7 +416,7 @@ export default class PageScreenshot {
     }
 
     private async generateBodySnapshot() {
-        this.bodyCanvas = await html2canvas(document.body);
+        this.bodyCanvas = await html2canvas(document.body, { logging: false });
         if (!this.bodyCanvas) throw new Error("生成body快照失败！");
         this.bodyCanvas.style.position = "absolute"
         this.bodyCanvas.style.top = "0px";
