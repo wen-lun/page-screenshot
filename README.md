@@ -1,7 +1,7 @@
 <img src="https://raw.githubusercontent.com/destiny-wenlun/page-screenshot/master/img/demo.gif" width="100%"/>
 
 # page-screenshot
-> page-screenshot是一个基于html2canvas开发的一款网页屏幕截屏插件。支持用户在截图结果上进行涂鸦操作。可用于用户截图反馈。
+> page-screenshot是一个基于html2canvas开发的一款网页截屏插件。支持用户在截图结果上进行涂鸦操作。可用于用户截图反馈。
 
 
 # 安装 & 使用
