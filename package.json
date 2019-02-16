@@ -2,7 +2,7 @@
   "name": "page-screenshot",
   "version": "1.0.0",
   "description": "网页屏幕截图",
-  "main": "./index.js",
+  "main": "lib/page-screenshot.js",
   "types": "types/page-screenshot.d.ts",
   "files": [
     "index.js",
@@ -11,10 +11,11 @@
     "src"
   ],
   "scripts": {
-    "uglifyjs": "uglifyjs dist/page-screenshot.js -o dist/page-screenshot.min.js",
-    "uglifycss": "uglifycss dist/page-screenshot.css > dist/page-screenshot.min.css",
-    "build": "webpack & npm run uglifyjs & npm run uglifycss",
+    "dev": "webpack-dev-server --config webpack.dev.config.js",
+    "build": "webpack --config webpack.browser.config.js",
+    "lib": "webpack --config webpack.umd.config.js",
     "all": "npm run build & npm run lib",
+    "watch": "webpack --watch --config webpack.browser.config.js",
     "release": "npm run lib & npm publish"
   },
   "keywords": [
@@ -35,15 +36,18 @@
   "devDependencies": {
     "clean-webpack-plugin": "^1.0.1",
     "css-loader": "^2.1.0",
-    "extract-text-webpack-plugin": "^3.0.2",
     "file-loader": "^3.0.1",
+    "html-webpack-plugin": "^3.2.0",
     "less": "^3.9.0",
     "less-loader": "^4.1.0",
-    "ts-loader": "^3.1.1",
+    "mini-css-extract-plugin": "^0.5.0",
+    "optimize-css-assets-webpack-plugin": "^5.0.1",
+    "ts-loader": "^5.3.3",
     "typescript": "^3.2.2",
-    "uglify-js": "^3.4.9",
-    "uglifycss": "0.0.29",
-    "webpack": "^3.12.0"
+    "uglifyjs-webpack-plugin": "^2.1.1",
+    "webpack": "^4.29.4",
+    "webpack-cli": "^3.2.3",
+    "webpack-dev-server": "^3.1.14"
   },
   "repository": {
     "type": "git",
