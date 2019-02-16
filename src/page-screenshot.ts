@@ -112,6 +112,10 @@ export default class PageScreenshot {
         this.maskCanvas.addEventListener("mousedown", this.onMousedown.bind(this));
         this.maskCanvas.addEventListener("mousemove", this.onMousemove.bind(this));
         window.addEventListener("mouseup", this.onMouseup.bind(this));
+        this.maskCanvas.oncontextmenu = e => {//鼠标右键
+            this.end();
+            return false;
+        };
 
         this.tools.onSave(async () => {
             let { blob } = await this.drawClip();
