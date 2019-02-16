@@ -1,0 +1,99 @@
+.container {
+    width: 1000px;
+    margin: 15px auto;
+}
+
+.bangumi-list .page {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.bangumi-list .body {
+    display: flex;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.bangumi-list .body .add {
+    width: 300px;
+    height: 146.66666667px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.bangumi-list .body .add:hover {
+    color: #00a1d6;
+    box-shadow: 0 0 5px #ccc;
+}
+
+.bangumi-list .body .add .icon {
+    font-weight: bold;
+    font-size: 50px;
+}
+
+.bangumi-list .body .item {
+    margin: 0 10px 20px;
+    display: flex;
+}
+
+.bangumi-list .body .item .left {
+    position: relative;
+}
+
+.bangumi-list .body .item .left .operator {
+    position: absolute;
+    right: 0;
+    border-top-right-radius: 6px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 15px;
+}
+
+.bangumi-list .body .item .left .operator i {
+    cursor: pointer;
+    margin: 3px;
+}
+
+.bangumi-list .body .item .left .operator i:hover {
+    color: #00a1d6;
+}
+
+.bangumi-list .body .item .left img.cover {
+    width: 110px;
+    height: 146.66666667px;
+    border-radius: 6px;
+    box-shadow: 0 0 5px #ccc;
+}
+
+.bangumi-list .body .item .info {
+    width: 190px;
+    padding-left: 10px;
+}
+
+.bangumi-list .body .item .info .title {
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.bangumi-list .body .item .info .title:hover {
+    color: #00a1d6;
+}
+
+.bangumi-list .body .item .info .date {
+    color: #969696;
+}
+
+.bangumi-list .body .item .info .desc {
+    padding-top: 10px;
+    font-size: 12px;
+    height: 95px;
+    color: #969696;
+    overflow: hidden;
+}
