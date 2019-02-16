@@ -32,10 +32,10 @@ interface ClipInfo {
 export declare interface Option {
     dotRadius?: number
     borderColor?: string
-    background?: string
     saveFileName?: string
-    onClipEnd?: (clip: { dataURL: string, blob: Blob }) => any
     zIndex?: number
+    /**若返回true则该HTMLElement元素不会被渲染 */
+    ignoreElements?: (el: HTMLElement) => boolean
 }
 
 
@@ -43,12 +43,13 @@ export default class PageScreenshot {
     private options: Option = {
         dotRadius: 3,
         borderColor: "red",
-        background: "rgba(0,0,0,.4)",
         saveFileName: "截图",
-        zIndex: 5000
+        zIndex: 5000,
+        ignoreElements: () => false
     }
 
     private bodyCanvas?: HTMLCanvasElement
+    private loadingDom = document.createElement("div")
 
     private maskCanvas = document.createElement("canvas")
     private maskCtx = this.maskCanvas.getContext("2d")!
@@ -65,8 +66,33 @@ export default class PageScreenshot {
 
     constructor(options?: Option) {
         this.options = { ...this.options, ...options };
-        this.tools = new Tool(this.options.zIndex!);
-        this.paint = new Paint(this.options.zIndex!);
+        const { zIndex } = this.options;
+        this.tools = new Tool(zIndex!);
+        this.paint = new Paint(zIndex!);
+        this.loadingDom.className = "page-screenshot-spinner";
+        this.loadingDom.style.zIndex = zIndex + "";
+        this.loadingDom.setAttribute("data-html2canvas-ignore", "true");
+        this.loadingDom.innerHTML = `
+        <div class="spinner">
+            <div class="spinner-container container1">
+                <div class="circle1"></div>
+                <div class="circle2"></div>
+                <div class="circle3"></div>
+                <div class="circle4"></div>
+            </div>
+            <div class="spinner-container container2">
+                <div class="circle1"></div>
+                <div class="circle2"></div>
+                <div class="circle3"></div>
+                <div class="circle4"></div>
+            </div>
+            <div class="spinner-container container3">
+                <div class="circle1"></div>
+                <div class="circle2"></div>
+                <div class="circle3"></div>
+                <div class="circle4"></div>
+            </div>
+        </div>`;
         this.initMask();
     }
 
@@ -87,17 +113,6 @@ export default class PageScreenshot {
         this.maskCanvas.addEventListener("mousemove", this.onMousemove.bind(this));
         window.addEventListener("mouseup", this.onMouseup.bind(this));
 
-        this.tools.onOk(async () => {
-            let clip = await this.drawClip();
-            const { onClipEnd } = this.options;
-            onClipEnd && onClipEnd(clip);
-            this.end();
-        });
-
-        this.tools.onCancel(() => {
-            this.end();
-        });
-
         this.tools.onSave(async () => {
             let { blob } = await this.drawClip();
             FileSaver.saveAs(blob, this.options.saveFileName + ".jpg");
@@ -112,6 +127,7 @@ export default class PageScreenshot {
         });
 
         this.tools.onItemClick(item => {
+            this.calculateToolsPosition();
             if (item) {
                 let { size, color } = item.option!;
                 this.paint.setPaintType({ size, color, type: item.type });
@@ -251,7 +267,7 @@ export default class PageScreenshot {
         }
     }
 
-    //计算tools位置
+    /**计算tools位置 */
     private calculateToolsPosition() {
         let { x, y, w, h } = this.clipInfo!;
         const toolsSize = this.tools.size();
@@ -262,7 +278,11 @@ export default class PageScreenshot {
         if (top + toolsSize.th + toolsSize.toh > clientHeight) {//若工具栏超出下边界
             top = y - dotRadius - toolsSize.th;//就显示到裁剪区上面
             direction = "top";
+            if (top - toolsSize.toh < 0) {//工具栏超出上边界
+                top = y + h - dotRadius - toolsSize.th;
+            }
         }
+
         let left = x + w - toolsSize.width - dotRadius;//先显示裁剪区最右方
         if (left < 0) {//若工具栏超出左边界
             left = 0;//就显示在边界
@@ -297,7 +317,8 @@ export default class PageScreenshot {
     private drawMask() {
         const ctx = this.maskCtx;
         const { innerWidth, innerHeight } = window;
-        const { background = "rgba(0,0,0,.4)", dotRadius = 3, borderColor = "red" } = this.options;
+        const { dotRadius = 3, borderColor = "red" } = this.options;
+        const background = "rgba(0,0,0,.4)";
 
         ctx.clearRect(0, 0, innerWidth, innerHeight);
 
@@ -375,7 +396,7 @@ export default class PageScreenshot {
         return { scrollTop, scrollLeft };
     }
 
-    private async drawClip(): Promise<{ dataURL: string, blob: Blob }> {
+    private async drawClip(): Promise<{ dataURL: string, blob: Blob, canvas: HTMLCanvasElement }> {
         if (!this.bodyCanvas || !this.clipInfo) throw new Error("bodyCanvas or clipInfo is not undefined");
         const clipCanvas = document.createElement("canvas");
         const { x, y, w, h } = this.clipInfo;
@@ -396,7 +417,7 @@ export default class PageScreenshot {
         return new Promise((resolve, reject) => {
             clipCanvas.toBlob(blob => {
                 if (!blob) reject("截图失败！");
-                resolve({ dataURL: clipCanvas.toDataURL(), blob: blob! });
+                resolve({ dataURL: clipCanvas.toDataURL(), blob: blob!, canvas: clipCanvas });
             }, "image/jpeg", 0.95);
         })
     }
@@ -416,21 +437,47 @@ export default class PageScreenshot {
     }
 
     private async generateBodySnapshot() {
-        this.bodyCanvas = await html2canvas(document.body, { logging: false });
+        document.body.appendChild(this.loadingDom);
+        const { innerHeight } = window;
+        const oldHeight = document.body.style.height;
+        if (document.body.offsetHeight < innerHeight) {
+            document.body.style.height = `${innerHeight}px`;
+        }
+        let { ignoreElements } = this.options;
+        this.bodyCanvas = await html2canvas(document.body, { logging: false, ignoreElements, type: 'view' });
+        document.body.style.height = oldHeight;//还原body高度
+        document.body.removeChild(this.loadingDom);
         if (!this.bodyCanvas) throw new Error("生成body快照失败！");
-        this.bodyCanvas.style.position = "absolute"
+        this.bodyCanvas.style.position = "absolute";
         this.bodyCanvas.style.top = "0px";
         this.bodyCanvas.style.left = "0px";
         document.body.appendChild(this.bodyCanvas);
     }
 
-    public async begin() {
+    /**
+     * 调用此方法，生成网页快照
+     * 当用户点击工具栏的取消按钮时，返回Promise<false>对象，点击确认按钮时，返回Promise<{ dataURL: string, blob: Blob, canvas: HTMLCanvasElement }>对象。
+     */
+    public async screenshot(): Promise<{ dataURL: string, blob: Blob, canvas: HTMLCanvasElement } | false> {
         document.body.style.userSelect = "none";
         await this.generateBodySnapshot();
+        this.maskCanvas.style.cursor = "crosshair";
         document.body.appendChild(this.maskCanvas);
         this.addEventListener();
         this.tools.addToBody();
         this.drawMask();
+
+        return new Promise(resolve => {
+            this.tools.onOk(async () => {
+                resolve(await this.drawClip())
+                this.end();
+            });
+
+            this.tools.onCancel(() => {
+                resolve(false);
+                this.end();
+            });
+        })
     }
 }
 
