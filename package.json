@@ -5,8 +5,7 @@
   "main": "lib/page-screenshot.js",
   "types": "types/page-screenshot.d.ts",
   "files": [
-    "index.js",
-    "dist",
+    "lib",
     "types",
     "src"
   ],
@@ -19,6 +18,9 @@
     "release": "npm run lib & npm publish"
   },
   "keywords": [
+    "page",
+    "snapshot",
+    "page-snapshot",
     "screenshot",
     "page2image",
     "page-to-image",
