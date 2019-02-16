@@ -50,6 +50,6 @@ module.exports = {
         new MiniCssExtractPlugin({
             filename: "page-screenshot.css"
         }),
-        new CleanWebpackPlugin(['dist/', "types"]),
+        new CleanWebpackPlugin(['dist/']),
     ]
 };
