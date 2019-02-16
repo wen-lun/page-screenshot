@@ -33,11 +33,11 @@ export default class Tool {
     /**工具栏位于在裁剪区域的那个方向 */
     private direction?: "top" | "bottom"
     private children: Array<ToolItem> = [
-        { type: "rect", title: "矩形工具", dom: document.createElement("div"), option: { size: CommonSize.MIDDLE, color: "black" } },
-        { type: "ellipse", title: "椭圆工具", dom: document.createElement("div"), option: { size: CommonSize.MIDDLE, color: "black" } },
-        { type: "arrow", title: "箭头工具", dom: document.createElement("div"), option: { size: CommonSize.MIDDLE, color: "black" } },
-        { type: "brush", title: "画笔工具", dom: document.createElement("div"), option: { size: CommonSize.MIDDLE, color: "black" } },
-        { type: "text", title: "文字工具", dom: document.createElement("div"), option: { size: TextSize.MIDDLE, color: "black" } },
+        { type: "rect", title: "矩形工具", dom: document.createElement("div"), option: { size: CommonSize.MIDDLE, color: "green" } },
+        { type: "ellipse", title: "椭圆工具", dom: document.createElement("div"), option: { size: CommonSize.MIDDLE, color: "green" } },
+        { type: "arrow", title: "箭头工具", dom: document.createElement("div"), option: { size: CommonSize.MIDDLE, color: "green" } },
+        { type: "brush", title: "画笔工具", dom: document.createElement("div"), option: { size: CommonSize.MIDDLE, color: "green" } },
+        { type: "text", title: "文字工具", dom: document.createElement("div"), option: { size: TextSize.MIDDLE, color: "green" } },
         { type: "undo", title: "撤销", dom: document.createElement("div") },
         { type: "divider", dom: document.createElement("div") },
         { type: "save", title: "保存", dom: document.createElement("div") },
@@ -84,7 +84,7 @@ export default class Tool {
         this.tools.className = "page-screenshot-tools hide";
         this.tools.style.top = "0px";
         this.tools.style.left = "0px";
-        this.tools.style.zIndex = (zIndex + 100) + "";
+        this.tools.style.zIndex = this.toolOption.style.zIndex = (zIndex + 300) + "";
 
         //工具栏
         this.children.forEach(item => {
